@@ -13,18 +13,25 @@ PASS=0
 FAIL=0
 WARN=0
 
+version_of() {
+    case "$1" in
+        go) go version 2>&1 | head -1 ;;
+        *) "$1" --version 2>&1 | head -1 ;;
+    esac
+}
+
 check() {
     local name="$1"
     local cmd="$2"
-    local min_version="$3"
 
     if command -v "$cmd" &> /dev/null; then
-        version=$($cmd --version 2>&1 | head -1 || echo "unknown")
+        local version
+        version=$(version_of "$cmd" || echo "unknown")
         echo -e "  ${GREEN}✓${NC} $name: $version"
-        ((PASS++))
+        PASS=$((PASS + 1))
     else
         echo -e "  ${RED}✗${NC} $name: not found"
-        ((FAIL++))
+        FAIL=$((FAIL + 1))
     fi
 }
 
@@ -34,10 +41,10 @@ warn_check() {
 
     if command -v "$cmd" &> /dev/null; then
         echo -e "  ${GREEN}✓${NC} $name: found"
-        ((PASS++))
+        PASS=$((PASS + 1))
     else
         echo -e "  ${YELLOW}?${NC} $name: not found (optional)"
-        ((WARN++))
+        WARN=$((WARN + 1))
     fi
 }
 
@@ -64,24 +71,24 @@ warn_check "semgrep" "semgrep"
 
 echo ""
 echo "Checking Go version..."
-GO_VERSION=$(go version 2>/dev/null | grep -oP 'go\K[0-9]+\.[0-9]+' || echo "0.0")
-GO_MAJOR=$(echo "$GO_VERSION" | cut -d. -f1)
-GO_MINOR=$(echo "$GO_VERSION" | cut -d. -f2)
-if [ "$GO_MAJOR" -ge 1 ] && [ "$GO_MINOR" -ge 22 ]; then
+GO_VERSION=$(go version 2>/dev/null | awk '{for (i=1;i<=NF;i++) if ($i ~ /^go[0-9]/) {sub(/^go/, "", $i); print $i; exit}}')
+GO_MAJOR=$(echo "${GO_VERSION:-0.0}" | cut -d. -f1)
+GO_MINOR=$(echo "${GO_VERSION:-0.0}" | cut -d. -f2)
+if [ "${GO_MAJOR:-0}" -ge 1 ] 2>/dev/null && [ "${GO_MINOR:-0}" -ge 22 ] 2>/dev/null; then
     echo -e "  ${GREEN}✓${NC} Go $GO_VERSION (>= 1.22 required)"
 else
-    echo -e "  ${RED}✗${NC} Go $GO_VERSION (>= 1.22 required)"
-    ((FAIL++))
+    echo -e "  ${RED}✗${NC} Go ${GO_VERSION:-unknown} (>= 1.22 required)"
+    FAIL=$((FAIL + 1))
 fi
 
 echo ""
 echo "Checking project builds..."
 if go build ./... 2>/dev/null; then
     echo -e "  ${GREEN}✓${NC} go build ./... succeeded"
-    ((PASS++))
+    PASS=$((PASS + 1))
 else
     echo -e "  ${RED}✗${NC} go build ./... failed"
-    ((FAIL++))
+    FAIL=$((FAIL + 1))
 fi
 
 echo ""
