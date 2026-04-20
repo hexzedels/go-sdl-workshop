@@ -1,0 +1,204 @@
+{
+  "info": {
+    "name": "GoSDLWorkshop",
+    "description": "Endpoints exposed by the GoSDLWorkshop server. Set `baseUrl` in the collection variables (default http://localhost:8080). Run the Login request first — its test script captures the JWT into the `jwt` variable, and subsequent requests send it as `Authorization: Bearer {{jwt}}`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:8080"},
+    {"key": "jwt", "value": ""},
+    {"key": "apiKey", "value": "workshop-api-key-f8c2d1a0"},
+    {"key": "username", "value": "user"},
+    {"key": "password", "value": "password123"}
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /api/auth/login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.token) { pm.collectionVariables.set('jwt', body.token); }",
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('has token', function () { pm.expect(body.token).to.be.a('string').and.not.empty; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "GET /api/documents",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{jwt}}"}],
+            "url": {"raw": "{{baseUrl}}/api/documents", "host": ["{{baseUrl}}"], "path": ["api", "documents"]}
+          }
+        },
+        {
+          "name": "GET /api/documents/search",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{jwt}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/search?q=project",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "documents", "search"],
+              "query": [{"key": "q", "value": "project"}]
+            }
+          }
+        },
+        {
+          "name": "GET /api/documents/:id",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{jwt}}"}],
+            "url": {"raw": "{{baseUrl}}/api/documents/1", "host": ["{{baseUrl}}"], "path": ["api", "documents", "1"]}
+          }
+        },
+        {
+          "name": "POST /api/documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{jwt}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Doc\",\n  \"content\": \"hello\",\n  \"locale\": \"en\"\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/documents", "host": ["{{baseUrl}}"], "path": ["api", "documents"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "item": [
+        {
+          "name": "GET /api/files",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{jwt}}"}],
+            "url": {
+              "raw": "{{baseUrl}}/api/files?name=example.txt",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "files"],
+              "query": [{"key": "name", "value": "example.txt"}]
+            }
+          }
+        },
+        {
+          "name": "POST /api/files",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{jwt}}"}],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{"key": "file", "type": "file", "src": []}]
+            },
+            "url": {"raw": "{{baseUrl}}/api/files", "host": ["{{baseUrl}}"], "path": ["api", "files"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "POST /api/webhooks/notify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "X-API-Key", "value": "{{apiKey}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"urls\": [\"https://example.com/hook\"]\n}"
+            },
+            "url": {"raw": "{{baseUrl}}/api/webhooks/notify", "host": ["{{baseUrl}}"], "path": ["api", "webhooks", "notify"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "GET /api/admin/sessions",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{jwt}}"}],
+            "url": {"raw": "{{baseUrl}}/api/admin/sessions", "host": ["{{baseUrl}}"], "path": ["api", "admin", "sessions"]}
+          }
+        },
+        {
+          "name": "GET /api/admin/audit",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{jwt}}"}],
+            "url": {"raw": "{{baseUrl}}/api/admin/audit", "host": ["{{baseUrl}}"], "path": ["api", "admin", "audit"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Debug",
+      "description": "Available unless the server was built with `-tags nodebug`.",
+      "item": [
+        {
+          "name": "GET /debug/pprof/",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{baseUrl}}/debug/pprof/", "host": ["{{baseUrl}}"], "path": ["debug", "pprof", ""]}
+          }
+        },
+        {
+          "name": "GET /debug/pprof/goroutine",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/debug/pprof/goroutine?debug=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["debug", "pprof", "goroutine"],
+              "query": [{"key": "debug", "value": "1"}]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

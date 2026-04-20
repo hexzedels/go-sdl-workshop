@@ -1,0 +1,14 @@
+server:
+  port: ":8080"
+
+database:
+  driver: "sqlite"
+  dsn: "workshop.db"
+
+jwt:
+  expiry_mins: 60
+
+# Secrets — jwt.secret, api_key, internal.signing_token — are intentionally
+# *not* in this file. They are sourced from environment variables at load
+# time: JWT_SECRET, API_KEY, SIGNING_TOKEN.
+# See `config/config.go` for the exact precedence order.

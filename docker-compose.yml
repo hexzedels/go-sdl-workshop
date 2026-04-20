@@ -1,0 +1,52 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        SIGNING_TOKEN: "GOSDL{94837c6ec03a7730}"
+        JWT_SECRET: "super-secret-jwt-key-2026"
+        API_KEY: "workshop-api-key-f8c2d1a0"
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads:/app/uploads
+    environment:
+      - DB_DRIVER=sqlite
+      - DB_DSN=workshop.db
+      - CTF_FLAG=GOSDL{146be65a71336868}
+
+  # PostgreSQL profile: docker compose --profile postgres up
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_DB: workshop
+      POSTGRES_USER: workshop
+      POSTGRES_PASSWORD: workshop
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app-pg:
+    build:
+      context: .
+      args:
+        SIGNING_TOKEN: "GOSDL{94837c6ec03a7730}"
+        JWT_SECRET: "super-secret-jwt-key-2026"
+        API_KEY: "workshop-api-key-f8c2d1a0"
+    profiles: ["postgres"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - DB_DRIVER=postgres
+      - DB_DSN=postgres://workshop:workshop@postgres:5432/workshop?sslmode=disable
+      - CTF_FLAG=GOSDL{146be65a71336868}
+    volumes:
+      - uploads:/app/uploads
+
+volumes:
+  uploads:
+  pgdata:
